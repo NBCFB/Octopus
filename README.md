@@ -1,5 +1,7 @@
 # Octopus - Serve HTTP Server Gracefully
 
+[![CircleCI](https://circleci.com/gh/NBCFB/Octopus/tree/develop.svg?style=svg)](https://circleci.com/gh/NBCFB/Octopus/tree/develop)
+
 ![](https://github.com/NBCFB/Octopus/blob/develop/octopus.jpeg)
 
 Octopus is a tool that help serve HTTP server gracefully. User can:
