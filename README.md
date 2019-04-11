@@ -11,6 +11,18 @@ Octopus is a tool that help serve HTTP server gracefully. User can:
 ## Credits
 Octopus is greatly inspired by the article ["Gracefully Restarting a Go Program Without Downtime"](https://gravitational.com/blog/golang-ssh-bastion-graceful-restarts/) written by Russell Jones. A lot of credits should go to Russell. 
 
+## Install
+```
+go get github.com/NBCFB/Octopus@lastest
+```
+
+If you use go 1.11+, you can just add import `github.com/NBCFB/Octopus/1.0.1` and start using it. When you run `go build` or `go test`, the module will be downloaded and installed automatically.
+
+You can check all the versions of Octopus using `go list`:
+```
+$ go list -m -versions github.com/NBCFB/Octopus
+```
+
 ## Example - HTTP Server
 
 ### Create A Graceful HTTP Server
@@ -66,7 +78,7 @@ Now, we can start the server using **go run** from command line:
 ```
 $ go run test_servers/simpleHTTPServer.go -h 172.18.1.239 -p 8080 &
 [1] 52215
-blackstar:Octopus xiali$ 2019/04/11 16:09:12 [INFO] Created a new listener on 172.18.1.239:8080.
+$ 2019/04/11 16:09:12 [INFO] Created a new listener on 172.18.1.239:8080.
 2019/04/11 16:09:12 [INFO] The server has started (52233).
 
 ```
@@ -88,7 +100,7 @@ func ping (w http.ResponseWriter, r *http.Request) {
 We do not need perform a 'stop-and-start' process. We can simply send a SIGUSR1 or SIGUSR2 to gracefully restart the server without blocking incoming requests:
 ```
 $ kill -SIGUSR1 52233
-blackstar:Octopus xiali$ 2019/04/11 16:18:11 [INFO] Server (52233) received signal "user defined signal 1".
+$ 2019/04/11 16:18:11 [INFO] Server (52233) received signal "user defined signal 1".
 2019/04/11 16:18:11 [INFO] Forked child (55344).
 2019/04/11 16:18:11 [INFO] Master (52233) is still alive.
 2019/04/11 16:18:11 [INFO] Unable to import a listener from file: unable to find listener on localhost:8080. Trying to create a new one.
@@ -108,7 +120,7 @@ You can set killMaster to true to kill the master after a child is successfully 
 Now, we can kill the master so that all the incoming requests will be handled based on the updated server binary.
 ```
 $ kill -SIGTERM 52233
-blackstar:Octopus xiali$ 2019/04/11 16:24:54 [INFO] Server (52233) received signal "terminated".
+$ 2019/04/11 16:24:54 [INFO] Server (52233) received signal "terminated".
 2019/04/11 16:24:54 [INFO] Digesting requests will be timed out at 2019-04-11 16:24:59
 2019/04/11 16:24:54 [INFO] The server has shut down.
 ```
