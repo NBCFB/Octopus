@@ -1,0 +1,35 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+    - image: circleci/golang:1.12
+
+    environment: # environment variables for the build itself
+      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+
+    steps:
+    - checkout
+
+    # Log the current branch
+    - run:
+        name: Show current branch
+        command: echo ${CIRCLE_BRANCH}
+
+    - restore_cache:
+        keys:
+        - go-mod-v1-{{ checksum "go.sum" }}
+
+    - save_cache:
+        key: go-mod-v1-{{ checksum "go.sum" }}
+        paths:
+          - "/go/pkg/mod"
+
+    - store_artifacts: # Upload test summary for display in Artifacts
+        path: /tmp/test-results
+        destination: raw-test-output
+
+    - store_test_results:
+        path: /tmp/test-results
