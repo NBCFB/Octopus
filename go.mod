@@ -1,4 +1,4 @@
-module github.com/NBCFB/Octopus
+module github.com/NBCFB/Octopus/v0.1-beta
 
 go 1.12
 

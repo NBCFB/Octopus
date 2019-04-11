@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	// Default Environment Variable
+	// DefaultEnvVar is the default environment variable
 	DefaultEnvVar       = "OCTOPUS_LISTENER"
 	DefaultNetwork      = "tcp"
 	DefaultAwaitTimeout = 5 * time.Second
