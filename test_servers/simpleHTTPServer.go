@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func ping (w http.ResponseWriter, r *http.Request) {
+func ping(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("pong pong\n"))
 }
@@ -31,7 +31,7 @@ func main() {
 	r.Get("/ping", ping)
 
 	s := &http.Server{
-		Addr: addr,
+		Addr:         addr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

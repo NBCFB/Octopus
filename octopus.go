@@ -3,7 +3,6 @@ package Octopus
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -16,17 +15,19 @@ import (
 )
 
 const (
-	DefaultEnvVar = "OCTOPUS_LISTENER"
-	DefaultNetwork = "tcp"
-	DefaultAwaitTimeout =  5 * time.Second
+	// Default Environment Variable
+	DefaultEnvVar       = "OCTOPUS_LISTENER"
+	DefaultNetwork      = "tcp"
+	DefaultAwaitTimeout = 5 * time.Second
 )
+
 /*
 listenerDescriptor defines a listener descriptor file. A descriptor file is created when a child process is forked.
- */
+*/
 type listenerDescriptor struct {
-	Addr	string	`json:"addr"`
-	FD		int		`json:"FD"`
-	Name	string	`json:"Name"`
+	Addr string `json:"addr"`
+	FD   int    `json:"FD"`
+	Name string `json:"Name"`
 }
 
 /*
@@ -37,19 +38,19 @@ GracefulServer defines a HTTP server. The reason we do not make something like
 		...
 	}
 is because we want to give user freedom to make their own and we can serve it as long as it is a http.Server.
- */
+*/
 type GracefulServer struct {
-	Addr 		string
-	PID  		int
-	Server		*http.Server
-	Listener	net.Listener
+	Addr     string
+	PID      int
+	Server   *http.Server
+	Listener net.Listener
 }
 
 /*
 GracefulServe starts a HTTP server. It receives a http.Server server passed by user and an indicators killMaster.
 It first create a listener (either a new one or a imported one). Then it starts a goroutine for the server to start
 accepting connections. Any hooked signals will be handled in handleSignals(...).
- */
+*/
 func GracefulServe(server *http.Server, killMaster bool) (gs *GracefulServer, err error) {
 
 	srv := &GracefulServer{
@@ -116,7 +117,7 @@ func GracefulServeTLS(server *http.Server, killMaster bool, certFile, keyFile st
 
 /*
 GracefulShutDown shuts down a server with a timeout. In most case, you will not need use it.
- */
+*/
 func GracefulShutDown(server *http.Server) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultAwaitTimeout)
 	expired, _ := ctx.Deadline()
@@ -128,7 +129,7 @@ func GracefulShutDown(server *http.Server) (err error) {
 /*
 createListener creates a listener on a given address. If a descriptor file is found, it creates a listener out
 of it (importListener); otherwise, it creates a new one (newListener).
- */
+*/
 func (srv *GracefulServer) createListener() (err error) {
 	// Check environment variables
 	env := os.Getenv(DefaultEnvVar)
@@ -138,9 +139,9 @@ func (srv *GracefulServer) createListener() (err error) {
 		if err == nil {
 			log.Println("[INFO] Imported a listener from file.")
 			return
-		} else {
-			log.Printf("[INFO] Unable to import a listener from file: %v. Trying to create a new one.", err)
 		}
+		log.Printf("[INFO] Unable to import a listener from file: %v. Trying to create a new one.", err)
+
 	}
 
 	// If env is empty or unable to create a listener out of a descriptor file (e.g., file not found, broken),
@@ -156,7 +157,7 @@ func (srv *GracefulServer) createListener() (err error) {
 
 /*
 importListener imports a listener from a descriptor file.
- */
+*/
 func (srv *GracefulServer) importListener(env string) (err error) {
 	var fl listenerDescriptor
 
@@ -165,7 +166,7 @@ func (srv *GracefulServer) importListener(env string) (err error) {
 		return fmt.Errorf("unable to unmarsh [%s] environment variable", env)
 	}
 
-	if fl.Addr != srv.Addr  {
+	if fl.Addr != srv.Addr {
 		return fmt.Errorf("unable to find listener on %s", srv.Addr)
 	}
 
@@ -186,7 +187,7 @@ func (srv *GracefulServer) importListener(env string) (err error) {
 
 /*
 newListener creates a brand new listener.
- */
+*/
 func (srv *GracefulServer) newListener() (err error) {
 	srv.Listener, err = net.Listen(DefaultNetwork, srv.Addr)
 	if err != nil {
@@ -201,7 +202,7 @@ handleSignals handles OS signals. It receives two arguments killMaster and mpid.
 behaviour after a child is forked:
 	- if it is true, kill the master (using mpid) after a child is successfully forked
 	- if it is false, keep the master alive.
- */
+*/
 func (srv *GracefulServer) handleSignals(killMaster bool, mpid int) error {
 	sigChan := make(chan os.Signal, 1024)
 	sigHooks := []os.Signal{syscall.SIGHUP, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGINT, syscall.SIGTERM}
@@ -218,7 +219,7 @@ func (srv *GracefulServer) handleSignals(killMaster bool, mpid int) error {
 				continue
 			}
 			return srv.shutDown()
-		case syscall.SIGUSR1,  syscall.SIGUSR2:
+		case syscall.SIGUSR1, syscall.SIGUSR2:
 			err := srv.forkChild(killMaster, mpid)
 			if err != nil {
 				log.Printf("[ERR] Unable to fork a child: %v.\n", err)
@@ -235,8 +236,8 @@ func (srv *GracefulServer) handleSignals(killMaster bool, mpid int) error {
 
 /*
 forkChild forks a child. If killMaster is true, the master who has forked the child will be killed (using mpid).
- */
-func (srv *GracefulServer) forkChild(killMaster bool, mpid int) (error) {
+*/
+func (srv *GracefulServer) forkChild(killMaster bool, mpid int) error {
 	f, err := createListenerFile(srv.Listener)
 	if err != nil {
 		return err
@@ -244,9 +245,9 @@ func (srv *GracefulServer) forkChild(killMaster bool, mpid int) (error) {
 	defer f.Close()
 
 	l := listenerDescriptor{
-		Addr:	srv.Addr,
-		FD:		3,
-		Name:	f.Name(),
+		Addr: srv.Addr,
+		FD:   3,
+		Name: f.Name(),
 	}
 
 	env, err := json.Marshal(l)
@@ -280,7 +281,7 @@ func (srv *GracefulServer) forkChild(killMaster bool, mpid int) (error) {
 	if killMaster {
 		err = syscall.Kill(mpid, syscall.SIGTERM)
 		if err != nil {
-			return errors.New(fmt.Sprintf("unable to kill the master (%d): %v", mpid, err))
+			return fmt.Errorf("unable to kill the master (%d): %v", mpid, err)
 		}
 		log.Printf("[INFO] Master (%v) was killed.", mpid)
 	} else {
@@ -293,8 +294,8 @@ func (srv *GracefulServer) forkChild(killMaster bool, mpid int) (error) {
 /*
 shutDown shuts down a server. A context (expired in DefaultAwaitTimeout time) is created as a timeout to shut
 down the server.
- */
-func (srv *GracefulServer) shutDown() (err error){
+*/
+func (srv *GracefulServer) shutDown() (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultAwaitTimeout)
 	expired, _ := ctx.Deadline()
 	log.Printf("[INFO] Digesting requests will be timed out at %v", expired.Format("2006-01-02 15:04:05"))
@@ -304,7 +305,7 @@ func (srv *GracefulServer) shutDown() (err error){
 
 /*
 createListenerFile creates the listener file for a given listener based on the listener's type.
- */
+*/
 func createListenerFile(l net.Listener) (*os.File, error) {
 	switch t := l.(type) {
 	case *net.TCPListener:
@@ -314,4 +315,3 @@ func createListenerFile(l net.Listener) (*os.File, error) {
 	}
 	return nil, fmt.Errorf("unsupported listener: %T", l)
 }
-
