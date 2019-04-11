@@ -1,6 +1,6 @@
 # Octopus - Serve HTTP Server Gracefully
 
-[![CircleCI](https://circleci.com/gh/NBCFB/Octopus/tree/develop.svg?style=svg)](https://circleci.com/gh/NBCFB/Octopus/tree/develop)
+[![CircleCI](https://circleci.com/gh/NBCFB/Octopus/tree/develop.svg?style=svg)](https://circleci.com/gh/NBCFB/Octopus/tree/develop) ![](https://goreportcard.com/badge/github.com/NBCFB/Octopus)
 
 ![](https://github.com/NBCFB/Octopus/blob/develop/octopus.jpeg)
 
