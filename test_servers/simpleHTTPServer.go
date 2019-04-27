@@ -39,5 +39,5 @@ func main() {
 	}
 
 	// Start server
-	Octopus.GracefulServe(s, false)
+	Octopus.GracefulServe(s, true)
 }
