@@ -209,27 +209,26 @@ func (srv *GracefulServer) handleSignals(killMaster bool, mpid int) error {
 	signal.Notify(sigChan, sigHooks...)
 
 	for {
-		sig := <-sigChan
-		log.Printf("[INFO] Server (%d) received signal %q.\n", mpid, sig)
-		switch sig {
-		case syscall.SIGHUP:
-			err := srv.forkChild(killMaster, mpid)
-			if err != nil {
-				log.Printf("[ERR] Unable to fork a child: %v.\n", err)
-				continue
+		select {
+			case sig := <-sigChan:
+			log.Printf("[INFO] Server (%d) received signal %q.\n", mpid, sig)
+			switch sig {
+			case syscall.SIGHUP:
+				err := srv.forkChild(killMaster, mpid)
+				if err != nil {
+					log.Printf("[ERR] Unable to fork a child: %v.\n", err)
+					continue
+				}
+				return srv.shutDown()
+			case syscall.SIGUSR1, syscall.SIGUSR2:
+				err := srv.forkChild(killMaster, mpid)
+				if err != nil {
+					log.Printf("[ERR] Unable to fork a child: %v.\n", err)
+					continue
+				}
+			case syscall.SIGINT, syscall.SIGTERM:
+				return srv.shutDown()
 			}
-			return srv.shutDown()
-		case syscall.SIGUSR1, syscall.SIGUSR2:
-			err := srv.forkChild(killMaster, mpid)
-			if err != nil {
-				log.Printf("[ERR] Unable to fork a child: %v.\n", err)
-				continue
-			}
-		case syscall.SIGINT, syscall.SIGTERM:
-			return srv.shutDown()
-
-		default:
-			log.Printf("[INFO] The signal %q is not a hooked one, ignored!\n", sig)
 		}
 	}
 }
