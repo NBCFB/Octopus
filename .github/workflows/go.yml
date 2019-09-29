@@ -16,4 +16,11 @@ jobs:
       - name: Build
         env:
           GOPROXY: "https://proxy.golang.org"
-        run: go build .
+        run: |
+          go build .
+          echo "Build done!" >> build.log
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: build-log
+          path: build.log
